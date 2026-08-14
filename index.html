@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TuitionBoard AI - Interactive Classroom Blackboard & AI Tutor</title>
+  <meta name="description" content="An interactive smart classroom blackboard and step-by-step AI tuition tutor for deep understanding across math, science, and computer science.">
+
+  <!-- KaTeX for crisp mathematical LaTeX formulas -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" crossorigin="anonymous">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js" crossorigin="anonymous"></script>
+
+  <!-- Canvas Confetti for mastery celebrations -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+
+  <!-- Application Styles -->
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/chalkboard.css">
+</head>
+<body>
+
+  <!-- App Header -->
+  <header class="app-header">
+    <div class="header-brand" onclick="window.appState.openModal('topicModal')">
+      <div class="brand-icon">🎓</div>
+      <div class="brand-info">
+        <h1>TuitionBoard AI</h1>
+        <span class="brand-tag">Interactive Classroom</span>
+      </div>
+    </div>
+
+    <!-- Active Topic Badge -->
+    <div class="header-center-info">
+      <button class="topic-badge-btn" id="headerCenterTopicBtn" onclick="window.appState.openModal('topicModal')">
+        <span class="subject-tag" id="headerSubjectTag">Mathematics</span>
+        <span id="headerTopicTitle">Calculus: The Derivative & Chain Rule Intuition</span>
+        <span style="font-size: 0.75rem; color: var(--text-secondary);">▼ Switch Topic</span>
+      </button>
+    </div>
+
+    <!-- Header Actions & Controls -->
+    <div class="header-actions">
+      <!-- Onboarding Tutorial Trigger -->
+      <button class="btn-icon-text" onclick="window.tutorialEngine.startTour()" title="Start Interactive Tuition Feature Tour">
+        <span class="icon">🎓</span>
+        <span>Tour</span>
+      </button>
+
+      <!-- AI Problem Solver Button -->
+      <button class="btn-icon-text" style="color:var(--accent-cyan); border-color: rgba(6,182,212,0.4);" onclick="window.appState.openModal('solverModal')" title="Ask AI to solve any question on the chalkboard">
+        <span class="icon">🤖</span>
+        <span>AI Solver</span>
+      </button>
+
+      <!-- Theme Selector -->
+      <select class="theme-dropdown-select" onchange="window.chalkboard.setTheme(this.value)">
+        <option value="classic-green">Classic Green Board</option>
+        <option value="dark-slate">Dark Slate Board</option>
+        <option value="whiteboard">Modern Whiteboard</option>
+        <option value="blueprint">Blueprint Grid</option>
+      </select>
+
+      <!-- Voice Narration Toggle -->
+      <button class="btn-icon-text btn-active-state" id="btnVoiceToggle" onclick="window.appState.toggleSpeechMute()" title="Toggle Tutor Voice Narration">
+        <span class="icon">🔊</span>
+        <span>Voice On</span>
+      </button>
+
+      <!-- SFX Toggle -->
+      <button class="btn-icon-text" id="btnSfxToggle" onclick="window.appState.toggleSfxMute()" title="Chalk & Bell Sound Effects">
+        <span class="icon">🔔</span>
+        <span>SFX On</span>
+      </button>
+
+      <!-- API Key Modal Trigger -->
+      <button class="btn-icon-text" onclick="window.appState.openModal('apiKeyModal')" title="Configure Gemini AI Key">
+        <span class="icon">✨</span>
+        <span>AI Key</span>
+      </button>
+
+      <!-- Export Notes Trigger -->
+      <button class="btn-icon-text" onclick="window.exportService.exportLessonMarkdown()" title="Download Lesson Notes as Markdown">
+        <span class="icon">📥</span>
+        <span>Notes</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main App Layout -->
+  <main class="app-main">
+    
+    <!-- Left Sidebar: AI Tutor & Pedagogical Flow -->
+    <aside class="tutor-sidebar">
+      
+      <!-- Tutor Persona Card -->
+      <div class="tutor-card">
+        <div class="tutor-header">
+          <div class="tutor-avatar-wrap" id="tutorAvatarContainer">
+            <span>👨‍🏫</span>
+            <div class="tutor-status-badge"></div>
+          </div>
+          <div class="tutor-title-info">
+            <h3>Professor Antigravity</h3>
+            <p>Your Private Tuition Tutor</p>
+            <div class="soundwave-container" id="tutorSoundwave" style="display:none;">
+              <div class="soundwave-bar"></div>
+              <div class="soundwave-bar"></div>
+              <div class="soundwave-bar"></div>
+              <div class="soundwave-bar"></div>
+              <div class="soundwave-bar"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tutor Speech Bubble -->
+        <div class="tutor-speech-bubble">
+          <div class="speech-stage-title" id="tutorStageTitle">Stage 1: Core Intuition</div>
+          <p class="speech-text" id="tutorSpeechText">
+            Welcome to today's tuition class! Let's break down this concept on the blackboard step-by-step.
+          </p>
+          <div class="speech-controls">
+            <button class="btn-mini" onclick="window.appState.replayAudio()">
+              <span>🔄</span> Replay Explanation
+            </button>
+            <div style="font-size: 0.75rem; color: var(--text-muted);">Web Speech Synthesis</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 5-Stage Tuition Timeline -->
+      <div class="stage-timeline-card">
+        <div class="timeline-header">Lesson Mastery Stages</div>
+        <div class="stage-timeline-list" id="stageTimeline">
+          <!-- Populated dynamically by appState -->
+        </div>
+
+        <!-- Next / Previous Stage Actions -->
+        <div class="stage-nav-actions">
+          <button class="btn-secondary" id="btnPrevStage" onclick="window.appState.prevStage()">
+            ◀ Back
+          </button>
+          <button class="btn-primary" id="btnNextStage" onclick="window.appState.nextStage()">
+            <span>Next Step</span> ➔
+          </button>
+        </div>
+      </div>
+
+      <!-- Raise Hand / Ask Teacher Q&A -->
+      <div class="ask-tutor-box" id="askTutorSection">
+        <div class="ask-header">
+          <h4><span>✋</span> Raise Hand / Ask Question</h4>
+          <span style="font-size: 0.7rem; color: var(--accent-cyan);">Voice & Text</span>
+        </div>
+        <div class="ask-input-row">
+          <input type="text" id="askTeacherInput" class="ask-input-field" placeholder="Ask sir anything (e.g. 'Why did we multiply here?')..." onkeydown="if(event.key === 'Enter') window.appState.submitStudentQuestion()">
+          <button class="btn-mic" id="btnMicInput" onclick="window.appState.toggleVoiceRecognition()" title="Speak your question">
+            🎤
+          </button>
+          <button class="btn-secondary" style="padding: 0 0.75rem;" onclick="window.appState.submitStudentQuestion()">
+            Ask
+          </button>
+        </div>
+        <div id="askTeacherStatus" class="ask-status-text" style="display:none;"></div>
+      </div>
+
+      <!-- Study Session Pomodoro Bar -->
+      <div class="session-timer-bar" id="sessionTimerSection">
+        <div style="display:flex; align-items:center; gap:0.4rem;">
+          <span>⏳ Focus Session:</span>
+          <span class="timer-digits" id="sessionTimerDisplay">25:00</span>
+        </div>
+        <button class="btn-mini" id="btnTimerToggle">
+          <span>▶</span> Start
+        </button>
+      </div>
+
+    </aside>
+
+    <!-- Right Area: Smart Interactive Classroom Chalkboard -->
+    <section class="chalkboard-container theme-classic-green" id="chalkboardContainer">
+      
+      <!-- Blackboard Viewport -->
+      <div class="chalkboard-inner-viewport" id="chalkboardViewport">
+        <!-- Rendered Lesson Cards (Formulas, Analogies, Steps) -->
+        <div class="board-content-layer" id="boardContentLayer"></div>
+        <!-- Dynamic Interactive Diagrams (Gears, Slopes, Waves, Nets) -->
+        <div class="board-diagram-layer" id="boardDiagramLayer"></div>
+      </div>
+
+      <!-- Freehand Chalk Drawing Canvas Layer -->
+      <canvas id="drawingCanvas" class="drawing-canvas"></canvas>
+
+      <!-- Floating Chalkboard Toolbar -->
+      <div class="chalkboard-floating-toolbar" id="chalkboardFloatingToolbar">
+        <!-- Drawing Tools -->
+        <div class="toolbar-group">
+          <button class="tool-btn active" data-tool="pen" title="Chalk Pencil">
+            <span>✏️</span> Chalk
+          </button>
+          <button class="tool-btn" data-tool="text" title="Click anywhere on board to type chalk text">
+            <span>⌨️</span> Text
+          </button>
+          <button class="tool-btn" data-tool="highlighter" title="Chalk Highlighter">
+            <span>🖍️</span> Highlight
+          </button>
+          <button class="tool-btn" data-tool="laser" title="Laser Pointer for Speaking">
+            <span>🔴</span> Laser
+          </button>
+          <button class="tool-btn" data-tool="eraser" title="Eraser">
+            <span>🧽</span> Eraser
+          </button>
+        </div>
+
+        <div class="toolbar-divider"></div>
+
+        <!-- Chalk Colors -->
+        <div class="toolbar-group">
+          <button class="color-dot active" data-color="#f5f5f0" style="background: #f5f5f0;" title="Chalk White"></button>
+          <button class="color-dot" data-color="#fde047" style="background: #fde047;" title="Lemon Yellow"></button>
+          <button class="color-dot" data-color="#67e8f9" style="background: #67e8f9;" title="Cyan Blue"></button>
+          <button class="color-dot" data-color="#86efac" style="background: #86efac;" title="Mint Green"></button>
+          <button class="color-dot" data-color="#f472b6" style="background: #f472b6;" title="Coral Pink"></button>
+        </div>
+
+        <div class="toolbar-divider"></div>
+
+        <!-- Actions -->
+        <div class="toolbar-group">
+          <button class="tool-btn" onclick="window.chalkboard.undoStroke()" title="Undo last chalk stroke">
+            <span>↩️</span> Undo
+          </button>
+          <button class="tool-btn" onclick="window.chalkboard.clearCanvas()" title="Wipe all chalk drawings">
+            <span>🧹</span> Clear
+          </button>
+          <button class="tool-btn" onclick="window.exportService.exportBoardImage()" title="Snapshot Chalkboard as PNG Image">
+            <span>📸</span> Snapshot
+          </button>
+        </div>
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- AI Step-by-Step Problem Solver Modal -->
+  <div class="modal-overlay" id="solverModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>🤖 AI Chalkboard Problem Solver</h3>
+        <button class="modal-close-btn" onclick="window.appState.closeModal('solverModal')">✕</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1rem;">
+          Enter any math problem, physics equation, coding concept, or homework question. The AI tutor will solve it step-by-step with full KaTeX derivations directly on the classroom chalkboard!
+        </p>
+        <div style="display:flex; flex-direction:column; gap:0.75rem;">
+          <textarea id="problemSolverInput" class="ask-input-field" style="min-height:90px; resize:vertical; font-family: var(--font-ui);" placeholder="e.g. Integrate x * e^(2x) dx, or Find the acceleration of a 5kg block on a 30-degree incline..."></textarea>
+          
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div id="problemSolverStatus" style="font-size:0.8rem; color:var(--accent-cyan); display:none;"></div>
+            <button class="btn-primary" onclick="window.appState.solveCustomProblem()">
+              Solve on Board ➔
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Topic Selector & Custom Topic Modal -->
+  <div class="modal-overlay" id="topicModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>📚 Explore Tuition Curriculum & Custom Topics</h3>
+        <button class="modal-close-btn" onclick="window.appState.closeModal('topicModal')">✕</button>
+      </div>
+      <div class="modal-body">
+        
+        <!-- Pre-built Topics -->
+        <div class="topic-cards-grid">
+          <div class="topic-select-card" onclick="window.appState.selectLesson('calc-derivative-chain-rule')">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <h4>📐 Calculus: The Derivative & Chain Rule Intuition</h4>
+              <span class="subject-tag">Math</span>
+            </div>
+            <p>Gear ratios, rates of change, tangent slopes, and step-by-step chain rule derivations.</p>
+          </div>
+
+          <div class="topic-select-card" onclick="window.appState.selectLesson('phys-quantum-duality')">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <h4>⚛️ Quantum Physics: Wave-Particle Duality & Double Slit</h4>
+              <span class="subject-tag">Physics</span>
+            </div>
+            <p>De Broglie matter waves, electron interference patterns, and wavefunction collapse.</p>
+          </div>
+
+          <div class="topic-select-card" onclick="window.appState.selectLesson('cs-neural-networks-backprop')">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <h4>🧠 AI & CS: How Neural Networks Learn (Backprop Intuition)</h4>
+              <span class="subject-tag">AI & CS</span>
+            </div>
+            <p>Tuning pegs analogy, gradient descent valleys, and multi-layer chain rule propagation.</p>
+          </div>
+
+          <div class="topic-select-card" onclick="window.appState.selectLesson('econ-supply-demand-equilibrium')">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <h4>📈 Economics: Supply, Demand & Market Equilibrium</h4>
+              <span class="subject-tag">Economics</span>
+            </div>
+            <p>The umbrella thunderstorm market, price discovery, surpluses, shortages, and curve shifts.</p>
+          </div>
+
+          <div class="topic-select-card" onclick="window.appState.selectLesson('bio-dna-replication-fork')">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <h4>🧬 Biology: DNA Replication & Leading vs Lagging Strand</h4>
+              <span class="subject-tag">Biology</span>
+            </div>
+            <p>The one-way zipper dilemma, Okazaki fragments, Helicase, Primase, and DNA Ligase.</p>
+          </div>
+        </div>
+
+        <!-- Custom Topic Builder -->
+        <div class="custom-topic-section">
+          <h4>✨ Teach Me ANY Custom Topic</h4>
+          <p style="font-size: 0.8rem; color: var(--text-secondary);">
+            Type any syllabus topic, concept, or question. TuitionBoard will automatically construct a 5-stage tuition lesson with formulas, analogies, and checkpoint quiz!
+          </p>
+          <div style="display:flex; gap:0.5rem; margin-top:0.3rem;">
+            <input type="text" id="customTopicInput" class="ask-input-field" placeholder="e.g. 'How does Fourier Transform work in audio?' or 'Binary Search Algorithm'" onkeydown="if(event.key==='Enter') window.appState.createCustomTopic()">
+            <button class="btn-primary" id="btnGenerateCustomTopic" onclick="window.appState.createCustomTopic()">
+              Build Lesson ➔
+            </button>
+          </div>
+          <div id="customTopicLoader" style="display:none; font-size:0.8rem; color:var(--accent-cyan); text-align:center; padding:0.5rem 0;">
+            ⏳ Building structured tuition chalkboard lesson...
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Checkpoint Quiz Challenge Modal -->
+  <div class="modal-overlay" id="quizModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>🎯 Checkpoint Mastery Challenge</h3>
+        <button class="modal-close-btn" onclick="window.quizEngine.closeQuizModal()">✕</button>
+      </div>
+      <div class="modal-body" id="quizModalBody">
+        <!-- Rendered by quizEngine -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Gemini AI API Key Modal -->
+  <div class="modal-overlay" id="apiKeyModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>✨ Configure Google Gemini AI Key</h3>
+        <button class="modal-close-btn" onclick="window.appState.closeModal('apiKeyModal')">✕</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size: 0.875rem; color: var(--text-secondary); margin-bottom: 1rem;">
+          TuitionBoard AI works out of the box with comprehensive smart curriculum engines. Adding your Google Gemini API key unlocks unlimited live generative tutoring on any custom topic!
+        </p>
+        <div style="display:flex; flex-direction:column; gap:0.75rem;">
+          <input type="password" id="geminiApiKeyInput" class="ask-input-field" placeholder="Paste your Gemini API Key (AIzaSy...)" value="">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" style="font-size:0.8rem; color:var(--accent-cyan); text-decoration:none;">
+              Get free Gemini API Key ↗
+            </a>
+            <button class="btn-primary" onclick="
+              const val = document.getElementById('geminiApiKeyInput').value;
+              window.geminiService.setApiKey(val);
+              alert(val ? 'API Key saved locally!' : 'API Key cleared.');
+              window.appState.closeModal('apiKeyModal');
+            ">
+              Save Key
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="js/soundEffects.js"></script>
+  <script src="js/speechEngine.js"></script>
+  <script src="js/geminiService.js"></script>
+  <script src="js/curriculum.js"></script>
+  <script src="js/chalkboard.js"></script>
+  <script src="js/quizEngine.js"></script>
+  <script src="js/exportService.js"></script>
+  <script src="js/tutorialEngine.js"></script>
+  <script src="js/app.js"></script>
+
+</body>
+</html>
