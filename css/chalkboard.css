@@ -1,0 +1,609 @@
+/* ==========================================================================
+   TuitionBoard AI - Chalkboard Aesthetics & Canvas Layer
+   Authentic Classroom Slate, Chalk Handwriting & Floating Drawing Toolbar
+   ========================================================================== */
+
+.chalkboard-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  user-select: none;
+  transition: background-color 0.4s ease;
+}
+
+/* ==========================================================================
+   Themes: Classic Green, Dark Slate, Whiteboard, Blueprint
+   ========================================================================== */
+
+/* 1. Classic Green Chalkboard */
+.theme-classic-green {
+  background-color: #142a1e;
+  background-image: 
+    radial-gradient(circle at 50% 50%, rgba(27, 56, 43, 0.9) 0%, rgba(16, 38, 27, 0.95) 80%),
+    radial-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 0);
+  background-size: 100% 100%, 24px 24px;
+  box-shadow: inset 0 0 100px rgba(0, 0, 0, 0.7);
+  border: 12px solid #5c3a21;
+  border-image: linear-gradient(to bottom, #784824, #4a2d17, #784824) 12;
+  color: #f5f5f0;
+}
+
+/* 2. Dark Slate Academic Board */
+.theme-dark-slate {
+  background-color: #151a23;
+  background-image: 
+    radial-gradient(circle at 50% 50%, rgba(30, 36, 48, 0.9) 0%, rgba(18, 22, 30, 0.95) 80%),
+    radial-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 0);
+  background-size: 100% 100%, 24px 24px;
+  box-shadow: inset 0 0 100px rgba(0, 0, 0, 0.8);
+  border: 12px solid #334155;
+  border-image: linear-gradient(to bottom, #475569, #1e293b, #475569) 12;
+  color: #f8fafc;
+}
+
+/* 3. Modern Lecture Whiteboard */
+.theme-whiteboard {
+  background-color: #f8fafc;
+  background-image: 
+    radial-gradient(circle at 50% 50%, #ffffff 0%, #f1f5f9 100%);
+  box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.05);
+  border: 12px solid #94a3b8;
+  border-image: linear-gradient(to bottom, #cbd5e1, #64748b, #cbd5e1) 12;
+  color: #0f172a;
+}
+
+.theme-whiteboard .chalk-title,
+.theme-whiteboard .chalk-icon,
+.theme-whiteboard .note-text,
+.theme-whiteboard .step-desc,
+.theme-whiteboard .typed-text-content {
+  color: #0f172a !important;
+  text-shadow: none !important;
+}
+
+.theme-whiteboard .katex {
+  color: #0f172a !important;
+}
+
+/* 4. Blueprint Tech Grid */
+.theme-blueprint {
+  background-color: #0c1f36;
+  background-image: 
+    linear-gradient(rgba(56, 189, 248, 0.15) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(56, 189, 248, 0.15) 1px, transparent 1px);
+  background-size: 30px 30px;
+  box-shadow: inset 0 0 80px rgba(0, 0, 0, 0.7);
+  border: 12px solid #1e3a8a;
+  color: #e0f2fe;
+}
+
+/* ==========================================================================
+   Board Inner Content & Freehand Canvas Layers
+   ========================================================================== */
+
+.chalkboard-inner-viewport {
+  position: relative;
+  flex: 1;
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 2rem 2.5rem;
+}
+
+.board-content-layer {
+  position: relative;
+  z-index: 10;
+  max-width: 960px;
+  margin: 0 auto;
+  pointer-events: auto;
+}
+
+.board-diagram-layer {
+  position: relative;
+  z-index: 12;
+  max-width: 960px;
+  margin: 1.25rem auto 0 auto;
+}
+
+/* Freehand Drawing Overlay Canvas */
+.drawing-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 20;
+  cursor: crosshair;
+  pointer-events: auto;
+}
+
+/* ==========================================================================
+   Chalkboard Content Cards & KaTeX Math
+   ========================================================================== */
+
+.chalkboard-stage-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.chalk-stage-badge {
+  font-family: var(--font-chalk-heading);
+  font-size: 1.4rem;
+  color: var(--chalk-yellow);
+  text-shadow: 1px 1px 3px rgba(0,0,0,0.6);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.chalk-title {
+  font-family: var(--font-chalk-heading);
+  font-size: 2.2rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--chalk-white);
+  text-shadow: var(--shadow-chalk);
+  margin-bottom: 0.5rem;
+  line-height: 1.2;
+}
+
+/* Analogy Box */
+.chalk-analogy-box {
+  background: rgba(255, 255, 255, 0.04);
+  border: 2px dashed rgba(253, 224, 71, 0.5);
+  border-radius: var(--radius-md);
+  padding: 1.25rem 1.5rem;
+  box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.2);
+}
+
+.analogy-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.analogy-icon {
+  font-size: 1.25rem;
+}
+
+.analogy-label {
+  font-family: var(--font-chalk-heading);
+  font-size: 1.4rem;
+  color: var(--chalk-yellow);
+  font-weight: 700;
+}
+
+.analogy-body {
+  font-family: var(--font-chalk);
+  font-size: 1.35rem;
+  line-height: 1.5;
+  color: var(--chalk-white);
+}
+
+/* LaTeX KaTeX Formula Card */
+.chalk-latex-card {
+  background: rgba(0, 0, 0, 0.25);
+  border-left: 4px solid var(--chalk-cyan);
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+  padding: 1rem 1.5rem;
+}
+
+.latex-label {
+  font-family: var(--font-chalk);
+  font-size: 1.15rem;
+  color: var(--chalk-cyan);
+  margin-bottom: 0.25rem;
+}
+
+.latex-formula {
+  font-size: 1.4rem;
+  overflow-x: auto;
+  padding: 0.4rem 0;
+}
+
+.katex {
+  font-size: 1.25em !important;
+  color: #fff !important;
+}
+
+/* Step-by-Step Worked Problems */
+.chalk-step-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.chalk-step-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: var(--radius-md);
+  padding: 0.875rem 1.25rem;
+}
+
+.chalk-step-row .step-badge {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 2px solid var(--chalk-yellow);
+  color: var(--chalk-yellow);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-chalk-heading);
+  font-size: 1.3rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.step-content {
+  flex: 1;
+}
+
+.step-desc {
+  font-family: var(--font-chalk);
+  font-size: 1.25rem;
+  color: var(--chalk-white);
+}
+
+.step-latex {
+  margin-top: 0.4rem;
+  font-size: 1.25rem;
+}
+
+/* Chalk Sticky Notes */
+.chalk-sticky-note {
+  position: relative;
+  padding: 1rem 1.5rem;
+  border-radius: var(--radius-sm);
+  box-shadow: 2px 4px 10px rgba(0, 0, 0, 0.4);
+  font-family: var(--font-chalk);
+  font-size: 1.3rem;
+  line-height: 1.4;
+  transform: rotate(-0.5deg);
+}
+
+.note-pin {
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 1.1rem;
+}
+
+.note-yellow {
+  background: #fef08a;
+  color: #713f12;
+  border-top: 6px solid #eab308;
+}
+
+.note-cyan {
+  background: #cffafe;
+  color: #155e75;
+  border-top: 6px solid #06b6d4;
+}
+
+.note-lime {
+  background: #dcfce7;
+  color: #14532d;
+  border-top: 6px solid #22c55e;
+}
+
+.note-coral {
+  background: #ffe4e6;
+  color: #881337;
+  border-top: 6px solid #f43f5e;
+}
+
+/* Live Teacher Annotations */
+.chalk-live-annotation {
+  border: 2px solid var(--chalk-yellow);
+  background: rgba(253, 224, 71, 0.15);
+  border-radius: var(--radius-md);
+  padding: 0.875rem 1.25rem;
+  font-family: var(--font-chalk);
+  font-size: 1.25rem;
+  color: var(--chalk-yellow);
+}
+
+.live-teacher-badge {
+  font-family: var(--font-ui);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--chalk-yellow);
+  margin-bottom: 0.3rem;
+}
+
+/* ==========================================================================
+   AI Problem Solution Card
+   ========================================================================== */
+
+.chalk-problem-solution-card {
+  background: rgba(15, 23, 42, 0.85);
+  border: 2px solid var(--accent-cyan);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+}
+
+.sol-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+}
+
+.sol-badge {
+  font-family: var(--font-ui);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--accent-cyan);
+  background: rgba(6, 182, 212, 0.15);
+  padding: 0.25rem 0.6rem;
+  border-radius: var(--radius-sm);
+}
+
+.sol-close-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 1.1rem;
+  cursor: pointer;
+}
+
+.sol-close-btn:hover {
+  color: #fff;
+}
+
+/* ==========================================================================
+   Chalk Text Typing Tool & Typed Notes
+   ========================================================================== */
+
+.chalk-floating-input-wrap {
+  position: absolute;
+  z-index: 50;
+  background: rgba(15, 23, 42, 0.95);
+  border: 2px solid var(--chalk-yellow);
+  border-radius: var(--radius-md);
+  padding: 0.3rem 0.5rem;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.chalk-text-field {
+  background: transparent;
+  border: none;
+  outline: none;
+  font-family: var(--font-chalk);
+  font-size: 1.3rem;
+  color: #fff;
+  min-width: 220px;
+}
+
+.btn-stamp-chalk {
+  background: var(--accent-cyan);
+  color: #000;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 0.25rem 0.6rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.btn-cancel-chalk {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.chalk-typed-note-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px dashed rgba(255, 255, 255, 0.3);
+  border-radius: var(--radius-sm);
+  padding: 0.3rem 0.75rem;
+  margin: 0.3rem 0;
+  font-family: var(--font-chalk);
+  font-size: 1.4rem;
+}
+
+.btn-delete-typed-note {
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.4);
+  cursor: pointer;
+  font-size: 0.75rem;
+  padding: 0 0.2rem;
+}
+
+.btn-delete-typed-note:hover {
+  color: var(--accent-rose);
+}
+
+/* Checkpoint Quiz Prompt Card */
+.chalk-quiz-prompt-card {
+  background: rgba(245, 158, 11, 0.1);
+  border: 2px dashed rgba(245, 158, 11, 0.6);
+  border-radius: var(--radius-md);
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.quiz-prompt-header {
+  font-family: var(--font-ui);
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--accent-amber);
+}
+
+.quiz-prompt-question {
+  font-family: var(--font-chalk);
+  font-size: 1.4rem;
+  color: var(--chalk-white);
+}
+
+.chalk-btn-interactive {
+  align-self: flex-start;
+  background: var(--accent-amber);
+  color: #000;
+  border: none;
+  font-family: var(--font-ui);
+  font-weight: 700;
+  font-size: 0.875rem;
+  padding: 0.6rem 1.25rem;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(245, 158, 11, 0.4);
+  transition: all 0.2s ease;
+}
+
+.chalk-btn-interactive:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.1);
+}
+
+/* ==========================================================================
+   Diagram Containers & SVGs
+   ========================================================================== */
+
+.chalk-diagram-card {
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-md);
+  padding: 1rem;
+  margin-top: 0.5rem;
+}
+
+.diagram-title {
+  font-family: var(--font-chalk-heading);
+  font-size: 1.25rem;
+  color: var(--chalk-yellow);
+  margin-bottom: 0.5rem;
+}
+
+.chalk-svg {
+  width: 100%;
+  max-height: 200px;
+}
+
+.spin-clockwise {
+  animation: spinClockwise 12s linear infinite;
+  transform-origin: center;
+}
+
+.spin-counter {
+  animation: spinCounter 8s linear infinite;
+  transform-origin: center;
+}
+
+@keyframes spinClockwise {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes spinCounter {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(-360deg); }
+}
+
+/* ==========================================================================
+   Floating Chalkboard Toolbar
+   ========================================================================== */
+
+.chalkboard-floating-toolbar {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--radius-full);
+  padding: 0.4rem 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  z-index: 30;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.6);
+}
+
+.toolbar-group {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.toolbar-divider {
+  width: 1px;
+  height: 22px;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.tool-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  padding: 0.4rem 0.65rem;
+  border-radius: var(--radius-full);
+  font-size: 0.825rem;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  transition: all 0.2s ease;
+}
+
+.tool-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+.tool-btn.active {
+  background: var(--accent-cyan);
+  color: #000;
+  font-weight: 700;
+}
+
+.color-dot {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.color-dot:hover {
+  transform: scale(1.2);
+}
+
+.color-dot.active {
+  border-color: #fff;
+  transform: scale(1.25);
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.8);
+}
